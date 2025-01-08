@@ -8,22 +8,27 @@ CFLAGS = -Wall -Wextra -Werror -g
 
 NAME = libft_malloc_$(HOSTTYPE).so
 
-SRC = malloc.c \
-	  free.c \
-	  realloc.c
+SRC = malloc.c 
+	#   free.c \
+	#   realloc.c
 
 #prob doesn't work, can't remember makefile
 OBJ = $(SRC:.c=.o)
 
-all: $(NAME)
+all: lft $(NAME)
+
+lft:
+	make -C libft/ bonus
 
 $(NAME): $(OBJ)
-	gcc -Wall -Wextra -Werror $(SRC) -o $(NAME) $(CFLAGS)
+	gcc $(SRC) -o $(NAME) libft/libft.a $(CFLAGS)
 
 clean:
+	make -C libft/ clean
 	rm -rf $(OBJ)
 
 fclean: clean
+	make -C libft/ fclean
 	rm -rf $(NAME)
 
 re: fclean all
