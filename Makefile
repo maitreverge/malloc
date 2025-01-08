@@ -1,15 +1,29 @@
 .PHONY: all re clean fclean
 
-NAME = libft_malloc{REPLACE THIS}.so
+ifeq ($(HOSTTYPE),)
+	HOSTTYPE := $(shell uname -m)_$(shell uname -s)
+endif
+
+CFLAGS = -Wall -Wextra -Werror -g
+
+NAME = libft_malloc_$(HOSTTYPE).so
 
 SRC = malloc.c \
 	  free.c \
 	  realloc.c
 
 #prob doesn't work, can't remember makefile
-OBJ = $(SRC).c=.o
+OBJ = $(SRC:.c=.o)
 
 all: $(NAME)
-	gcc -Wall -Wextra -Werror $(SRC) -o $(NAME)
 
 $(NAME): $(OBJ)
+	gcc -Wall -Wextra -Werror $(SRC) -o $(NAME) $(CFLAGS)
+
+clean:
+	rm -rf $(OBJ)
+
+fclean: clean
+	rm -rf $(NAME)
+
+re: fclean all
