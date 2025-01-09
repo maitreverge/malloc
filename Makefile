@@ -18,6 +18,7 @@ OBJ = $(SRC:.c=.o)
 all: lft $(NAME)
 
 lft:
+	make -C libft/
 	make -C libft/ bonus
 
 $(NAME): $(OBJ)

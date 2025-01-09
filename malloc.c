@@ -1,67 +1,38 @@
 #include "malloc.h"
 
-int	update_alloc_lst(size_t size, void *ptr, bool method)
+/*
+*	Preallocates the small and medium zones as specified in the subject
+*	(ALLOC_SIZE) - (ALLOC_SIZE / 100 * 85)
+*	-----------------------
+*	85% of prealloc'd space is for malloc itself
+*	other 15% is for g_alloc_lst
+*/
+void	prealloc_zones(void)
 {
-	t_alloc_list *new; 
-	t_alloc_list *prev = NULL;
-	t_alloc_list *temp = g_alloc_lst;
+	char 	*small;
+	char 	*medium;
 
-	if (method == ADD_ENTRY)
-	{
-		new = malloc(sizeof(t_alloc_list)); //not allowed to use malloc, but for testing purposes this is okay
+	small = mmap(NULL, SMALL_ALLOC, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	medium = mmap(NULL, MEDIUM_ALLOC, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-		if (ft_lstsize((t_list *)&g_alloc_lst) == 0)
-		{
-			g_alloc_lst->alloc_size = size;
-			g_alloc_lst->ptr = ptr;
-			g_alloc_lst->next = NULL;
-		}
-		ft_lstadd_front((t_list **)&g_alloc_lst, (t_list *)new);
-		printf("added entry of size %ld with address %p\n", size, ptr);//////////
-		return (-1);
-	}
-	if (g_alloc_lst == NULL || ft_lstsize((t_list *)&g_alloc_lst) == 0)
+	if (small == MAP_FAILED || medium == MAP_FAILED)
 	{
-		write(2, "free: error: double free\n", 26);
+		perror("mmap");
 		exit(EXIT_FAILURE);
 	}
-	while (temp != NULL)
+	g_alloc_lst = small + SMALL_ALLOC;
+	for (int i = g_alloc_lst - (SMALL_ALLOC / 100 * 85); i < small + SMALL_ALLOC; i += sizeof(t_alloc_list))
 	{
-		if (ptr == temp->ptr)
-		{
-			//delete node here
-			//this is really sloppy but ok for now
-			if (prev != NULL)
-				prev->next = temp->next;
-			printf("removed entry of size %ld with address %p\n", temp->alloc_size, ptr);//////////
-			return (temp->alloc_size);
-		}
-		prev = temp;
-		temp = temp->next;
+		g_alloc_lst->next = 
 	}
-	return (0);
 }
-
-void	my_free(void *ptr)
-{
-	printf("my free called\n");
-	int	to_free_sz;
-
-	if (ptr == NULL)
-	{
-		perror("free");
-		exit(EXIT_FAILURE);
-	}
-	to_free_sz = update_alloc_lst(0, ptr, RM_ENTRY);
-	munmap(ptr, to_free_sz);
-}
-
 
 void	*my_malloc(size_t size)
 {
-	printf("my malloc called\n");
 	char *addr;
 
+	if (g_alloc_lst == NULL || ft_lstsize(g_alloc_lst) == 0)
+		prealloc_zones();
 	addr = mmap(NULL, size, PROT_READ | PROT_WRITE, 
 		MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	if (addr == MAP_FAILED)
@@ -76,14 +47,12 @@ void	*my_malloc(size_t size)
 
 int main(void)
 {
-	char *s = my_malloc(42);
+	char *a = my_malloc(42);
+	char *b = my_malloc(13);
+	char *c = my_malloc(222);
 
-	for (int i = 0; i < 142; i++)
-		s[i] = 'a';
-	s[42] = '\0';
-	
-	// write(1, s, 42);
-
-	my_free(s);
+	my_free(a);
+	my_free(b);
+	my_free(c);
 	return (0);
 }
