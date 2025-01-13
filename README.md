@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="img/meme.png" width="70%"/>
+</p>
+
 # Allocating memory has never been so... fun?
 ### COUGH COUGGH HUUHHH COUGH COUGH COUGHHHH
 
