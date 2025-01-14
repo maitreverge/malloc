@@ -8,9 +8,11 @@ CFLAGS = -Wall -Wextra -Werror -g
 
 NAME = libft_malloc_$(HOSTTYPE).so
 
-SRC = malloc.c 
-	#   free.c \
-	#   realloc.c
+SRC = malloc.c \
+		free.c \
+		realloc.c \
+		utils.c
+
 
 #prob doesn't work, can't remember makefile
 OBJ = $(SRC:.c=.o)

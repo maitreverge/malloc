@@ -9,6 +9,6 @@ void	my_free(void *ptr)
 		perror("free");
 		exit(EXIT_FAILURE);
 	}
-	to_free_sz = update_alloc_lst(0, ptr, RM_ENTRY);
+	to_free_sz = update_alloc_lst(0, ptr, RM_ENTRY, NULL);
 	munmap(ptr, to_free_sz);
 }
