@@ -33,5 +33,6 @@ clean:
 fclean: clean
 	make -C libft/ fclean
 	rm -rf $(NAME)
+	rm a.out
 
 re: fclean all

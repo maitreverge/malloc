@@ -11,6 +11,7 @@
 #define MEDIUM_ALLOC PAGESIZE * 5
 #define SMALL_ENTRY 36
 #define MEDIUM_ENTRY 194
+#define WORD_SIZE 8
 #define ADD_ENTRY 1
 #define RM_ENTRY 0
 
@@ -39,6 +40,7 @@ void	*my_malloc(size_t size);
 void	my_free(void *ptr);
 void	*my_realloc(void *ptr, size_t size);
 
+void	*calc_alignment_padding(t_alloc_list *node);
 int		update_alloc_lst(size_t size, void *ptr, bool method, u_int64_t *g_alloc_lst_size);
 
 void	show_alloc_mem();

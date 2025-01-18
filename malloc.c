@@ -2,22 +2,80 @@
 
 t_alloc_list	*g_alloc_lst = NULL;
 
-char	*alloc_from_small_zone()
+/*
+*	Finds the first available node in offset (usually offset == g_alloc_lst).
+*	If the node after that is in use, calculates the size of the gap and
+*	determines if the desired allocation will fit.
+*		If it won't fit, find the next available node and start over. This means calling alloc_from_zone() with offset = t
+*		If at the end it still won't fit, call mmap() ????
+*	If the node after that is NOT in use, simply allocates 'size' bytes in the zone.
+*/
+
+char	*alloc_from_zone(size_t size, char *zone_ptr, int alloc_type, t_alloc_list *offset)
 {
+	t_alloc_list	*t = offset;
+	t_alloc_list	*prev = NULL;
+	u_int32_t		gap_size = 0;
+
+	while (t != NULL && t->alloc_size != 0)
+	{
+		prev = t;
+		t = t->next;
+	}
+	if (t != NULL)
+	{
+		if (t->next != NULL && t->next->alloc_size == 0)
+		{
+			t->alloc_size = size;
+			if (prev != NULL)
+				t->ptr = calc_alignment_padding(prev);
+			else
+				t->ptr = t;
+			return (t->ptr);
+		}
+		else
+		{
+			if (t->next == NULL)
+				gap_size = (size_t)(zone_ptr + alloc_type - t->alloc_size);
+			else
+				gap_size = (size_t)(prev->ptr + prev->alloc_size) - (size_t)t->next->ptr;
+			if (size <= gap_size)
+			{
+				t->alloc_size = size;
+				t->ptr = calc_alignment_padding(prev);
+			}
+			else
+				return (alloc_from_zone(size, zone_ptr, alloc_type, t));///////
+		}
+	}
+	else
+	{
+		//we reached the end of g_alloc_lst without finding a single available node
+		write(2, "oopsie\n", 8);
+	}
 	return (NULL);
 }
 
-char	*alloc_from_medium_zone()
+/*
+*	For the two functions below, it's important NOT to take memory
+*	from the region that's being used to store the alloc list!
+*/
+
+char	*alloc_from_small_zone(size_t size, char *zone_ptr)
 {
-	return (NULL);
+	return (alloc_from_zone(size, zone_ptr, SMALL_ALLOC, g_alloc_lst));
 }
 
+char	*alloc_from_medium_zone(size_t size, char *zone_ptr)
+{
+	return (alloc_from_zone(size, zone_ptr, MEDIUM_ALLOC, g_alloc_lst));
+}
 
 /*
 *	Preallocates the small and medium zones as specified in the subject,
 *	and creates the allocation list.
 */
-void	prealloc_zones(void)
+void	prealloc_zones(char **small_ptr, char **medium_ptr)
 {
 	char		 	*small = NULL;
 	char 			*medium = NULL;
@@ -52,23 +110,29 @@ void	prealloc_zones(void)
 	}
 	prev->next = NULL;
 	g_alloc_lst = (t_alloc_list *)(small + SMALL_ALLOC - (SMALL_ALLOC / 100 * 90));
+	*small_ptr = small;
+	*medium_ptr = medium;
 }
 
 void	*my_malloc(size_t size)
 {
-	char				*addr;
+	char				*addr = NULL;
+	char				*small;
+	char				*medium;
 	static u_int64_t	g_alloc_lst_size = 0;
 
 	if (g_alloc_lst == NULL || g_alloc_lst_size == 0)
-		prealloc_zones();
+		prealloc_zones(&small, &medium);
 	if (size <= MEDIUM_ENTRY)
 	{
+		if (size == 0)
+			return (NULL);
 		if (size <= SMALL_ENTRY)
-			addr = alloc_from_small_zone();
+			addr = alloc_from_small_zone(size, small);
 		else
-			addr = alloc_from_medium_zone();
+			addr = alloc_from_medium_zone(size, medium);
 	}
-	else
+	if (size > MEDIUM_ENTRY || addr == NULL)
 	{
 		addr = mmap(NULL, size, PROT_READ | PROT_WRITE, 
 			MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -85,7 +149,8 @@ void	*my_malloc(size_t size)
 
 int main(void)
 {
-	// printf("%ld\n", sizeof(u_int64_t));
+	// char *s = malloc(0);
+	// free(s);
 	// return (0);
 	char *a = my_malloc(42);
 	char *b = my_malloc(13);
