@@ -18,7 +18,6 @@ void	*calc_alignment_padding(t_alloc_list *node)
 static void update_alloc_lst_add(size_t size, void *ptr, u_int64_t *g_alloc_lst_size)
 {
 	t_alloc_list *new = NULL;
-	t_alloc_list *temp;
 
 	for (t_alloc_list *t = g_alloc_lst; t != NULL; t = t->next)
 	{
@@ -37,14 +36,8 @@ static void update_alloc_lst_add(size_t size, void *ptr, u_int64_t *g_alloc_lst_
 	}
 	new->alloc_size = size;
 	new->ptr = ptr;
-	new->next = NULL;
 	if (g_alloc_lst == NULL || *g_alloc_lst_size == 0)
 		g_alloc_lst = new;
-	else
-	{
-		temp = (t_alloc_list *)ft_lstlast((t_list *)g_alloc_lst);
-		temp->next = new;
-	}
 	(*g_alloc_lst_size)++;
 	printf("added entry of size %ld with address %p\n", size, ptr);//////////
 }
@@ -63,15 +56,13 @@ static int update_alloc_lst_rm(void *ptr, u_int64_t *g_alloc_lst_size)
 	{
 		if (ptr == temp->ptr)
 		{
+			printf("removed entry of size %ld with address %p\n", temp->alloc_size, ptr);//////////
 			//not sure about this. i'm assuming that allocations
 			//within the zones marked as freed are just reset to default
 			temp->alloc_size = 0;
 			temp->ptr = NULL;
 			if (prev != NULL)
 				prev->next = temp->next;
-			// if (*g_alloc_lst_size == 0)
-			// 	g_alloc_lst = NULL;
-			printf("removed entry of size %ld with address %p\n", temp->alloc_size, ptr);//////////
 			return (temp->alloc_size);
 		}
 		prev = temp;

@@ -11,48 +11,48 @@ t_alloc_list	*g_alloc_lst = NULL;
 *	If the node after that is NOT in use, simply allocates 'size' bytes in the zone.
 */
 
-char	*alloc_from_zone(size_t size, char *zone_ptr, int alloc_type, t_alloc_list *offset)
+char	*alloc_from_zone(size_t size, char *zone_ptr, u_int16_t alloc_type)
 {
-	t_alloc_list	*t = offset;
+	t_alloc_list	*t = g_alloc_lst;
 	t_alloc_list	*prev = NULL;
 	u_int32_t		gap_size = 0;
 
-	while (t != NULL && t->alloc_size != 0)
+	while (t != NULL)
 	{
-		prev = t;
-		t = t->next;
-	}
-	if (t != NULL)
-	{
-		if (t->next != NULL && t->next->alloc_size == 0)
+		while (t != NULL && t->alloc_size != 0)
 		{
-			t->alloc_size = size;
-			if (prev != NULL)
-				t->ptr = calc_alignment_padding(prev);
-			else
-				t->ptr = t;
-			return (t->ptr);
+			prev = t;
+			t = t->next;
 		}
-		else
+		if (t != NULL)
 		{
-			if (t->next == NULL)
-				gap_size = (size_t)(zone_ptr + alloc_type - t->alloc_size);
-			else
-				gap_size = (size_t)(prev->ptr + prev->alloc_size) - (size_t)t->next->ptr;
-			if (size <= gap_size)
+			if (t->next != NULL && t->next->alloc_size == 0)
 			{
 				t->alloc_size = size;
-				t->ptr = calc_alignment_padding(prev);
+				if (prev != NULL)
+					t->ptr = calc_alignment_padding(prev);
+				else
+					t->ptr = t;
+				return (t->ptr);
 			}
 			else
-				return (alloc_from_zone(size, zone_ptr, alloc_type, t));///////
+			{
+				if (t->next == NULL)
+					gap_size = (size_t)(zone_ptr + alloc_type - t->alloc_size);
+				else
+					gap_size = (size_t)(prev->ptr + prev->alloc_size) - (size_t)t->next->ptr;
+				if (size <= gap_size)
+				{
+					t->alloc_size = size;
+					t->ptr = calc_alignment_padding(prev);
+				}
+				else
+					continue ;
+			}
 		}
 	}
-	else
-	{
-		//we reached the end of g_alloc_lst without finding a single available node
-		write(2, "oopsie\n", 8);
-	}
+	//we reached the end of g_alloc_lst without finding a single available node
+	write(2, "oopsie\n", 8);
 	return (NULL);
 }
 
@@ -63,12 +63,12 @@ char	*alloc_from_zone(size_t size, char *zone_ptr, int alloc_type, t_alloc_list 
 
 char	*alloc_from_small_zone(size_t size, char *zone_ptr)
 {
-	return (alloc_from_zone(size, zone_ptr, SMALL_ALLOC, g_alloc_lst));
+	return (alloc_from_zone(size, zone_ptr, SMALL_ALLOC));
 }
 
 char	*alloc_from_medium_zone(size_t size, char *zone_ptr)
 {
-	return (alloc_from_zone(size, zone_ptr, MEDIUM_ALLOC, g_alloc_lst));
+	return (alloc_from_zone(size, zone_ptr, MEDIUM_ALLOC));
 }
 
 /*
@@ -112,6 +112,9 @@ void	prealloc_zones(char **small_ptr, char **medium_ptr)
 	g_alloc_lst = (t_alloc_list *)(small + SMALL_ALLOC - (SMALL_ALLOC / 100 * 90));
 	*small_ptr = small;
 	*medium_ptr = medium;
+
+	// for (t_alloc_list *t = g_alloc_lst; t != NULL; t = t->next)
+	// 	write(1, "hi\n", 3);
 }
 
 void	*my_malloc(size_t size)
@@ -152,9 +155,14 @@ int main(void)
 	// char *s = malloc(0);
 	// free(s);
 	// return (0);
-	char *a = my_malloc(42);
-	char *b = my_malloc(13);
-	char *c = my_malloc(222);
+	char *a = my_malloc(13 + 1);	//small
+	char *b = my_malloc(42 + 1);	//medium
+	char *c = my_malloc(222 + 1);	//large
+
+	// for (int i = 0; i < 23; i++)
+	// 	a[i] = 'a';
+	// a[23] = '\0';
+	// printf("%s\n", a);
 
 	my_free(a);
 	my_free(b);
