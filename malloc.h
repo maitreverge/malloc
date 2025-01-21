@@ -3,7 +3,7 @@
 
 /*
 *	SMALL_ALLOC and MEDIUM_ALLOC refer to the sizes of the preallocated zones
-*	SMALL_ENTRY and MEDIUM_ENTRY refer to the size of a single entry in their respective zones
+*	SMALL_ENTRY and MEDIUM_ENTRY refer to the maximum sizes of a single entry in their respective zones
 */
 
 #define PAGESIZE sysconf(_SC_PAGESIZE)

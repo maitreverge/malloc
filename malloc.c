@@ -155,8 +155,6 @@ void	*my_malloc(size_t size)
 
 int main(void)
 {
-	// free(NULL);
-	// return (0);
 	char *a = my_malloc(13 + 1);	//small
 	char *b = my_malloc(42 + 1);	//medium
 	char *c = my_malloc(222 + 1);	//large
