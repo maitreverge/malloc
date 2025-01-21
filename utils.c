@@ -44,8 +44,8 @@ static void update_alloc_lst_add(size_t size, void *ptr, u_int64_t *g_alloc_lst_
 
 static int update_alloc_lst_rm(void *ptr, u_int64_t *g_alloc_lst_size)
 {
-	t_alloc_list *prev = NULL;
-	t_alloc_list *temp = g_alloc_lst;
+	t_alloc_list	*temp = g_alloc_lst;
+	size_t			last_alloc_size;
 
 	if (g_alloc_lst == NULL || g_alloc_lst_size == NULL || *g_alloc_lst_size == 0)
 	{
@@ -58,17 +58,15 @@ static int update_alloc_lst_rm(void *ptr, u_int64_t *g_alloc_lst_size)
 		{
 			printf("removed entry of size %ld with address %p\n", temp->alloc_size, ptr);//////////
 			//not sure about this. i'm assuming that allocations
-			//within the zones marked as freed are just reset to default
+			//within the zones are just marked as freed and reset to default
+			last_alloc_size = temp->alloc_size;
 			temp->alloc_size = 0;
 			temp->ptr = NULL;
-			if (prev != NULL)
-				prev->next = temp->next;
-			return (temp->alloc_size);
+			(*g_alloc_lst_size)--;
+			return (last_alloc_size);
 		}
-		prev = temp;
 		temp = temp->next;
 	}
-	(*g_alloc_lst_size)--;
 	return (0);
 }
 
@@ -95,4 +93,57 @@ int	update_alloc_lst(size_t size, void *ptr, bool method, u_int64_t *g_alloc_lst
 	else if (method == RM_ENTRY)
 		return (update_alloc_lst_rm(ptr, nullcase_ptr));
 	return (0);
+}
+
+/*
+*	TINY : 0xA0000
+*	0xA0020 - 0xA004A : 42 bytes
+*	0xA006A - 0xA00BE : 84 bytes
+*	SMALL : 0xAD000
+*	0xAD020 - 0xADEAD : 3725 bytes
+*	LARGE : 0xB0000
+*	0xB0020 - 0xBBEEF : 48847 bytes
+*	Total : 52698 bytes
+*/
+
+void	show_alloc_mem(void)
+{
+	t_show_alloc_mem ptrs;
+
+	ptrs = show_alloc_mem_set(NULL, NULL);
+
+	printf("TINY : %p\n", ptrs.small_ptr);
+	for (t_alloc_list *t = g_alloc_lst; t != NULL && t->alloc_size <= SMALL_ENTRY; t = t->next)
+		printf("%p - %p : %ld bytes\n", t->ptr, (t->ptr + t->alloc_size), t->alloc_size);
+
+	printf("SMALL : %p\n", ptrs.medium_ptr);
+	for (t_alloc_list *t = g_alloc_lst; t != NULL && t->alloc_size <= MEDIUM_ENTRY; t = t->next)
+	{
+		if (t->alloc_size > SMALL_ENTRY)
+			printf("%p - %p : %ld bytes\n", t->ptr, (t->ptr + t->alloc_size), t->alloc_size);
+	}
+
+	for (t_alloc_list *t = g_alloc_lst; t != NULL; t = t->next)
+	{
+		bool print = true;
+
+		if (t->alloc_size > MEDIUM_ENTRY)
+		{
+			if (print == true)
+				printf("LARGE : %p\n", t->ptr);
+			printf("%p - %p : %ld bytes\n", t->ptr, (t->ptr + t->alloc_size), t->alloc_size);
+			print = false;
+		}
+	}
+}
+
+t_show_alloc_mem	show_alloc_mem_set(char *small_ptr, char *medium_ptr)
+{
+	static t_show_alloc_mem	ptrs;
+
+	if (small_ptr == NULL || medium_ptr == NULL)
+		return (ptrs);
+	ptrs.small_ptr = small_ptr;
+	ptrs.medium_ptr = medium_ptr;
+	return (ptrs);
 }

@@ -34,6 +34,12 @@ typedef struct s_alloc_list
 	struct s_alloc_list	*next;
 }	t_alloc_list;
 
+typedef struct s_show_alloc_mem
+{
+	char	*small_ptr;
+	char	*medium_ptr;
+}	t_show_alloc_mem;
+
 extern t_alloc_list	*g_alloc_lst;
 
 void	*my_malloc(size_t size);
@@ -43,6 +49,7 @@ void	*my_realloc(void *ptr, size_t size);
 void	*calc_alignment_padding(t_alloc_list *node);
 int		update_alloc_lst(size_t size, void *ptr, bool method, u_int64_t *g_alloc_lst_size);
 
-void	show_alloc_mem();
+void	show_alloc_mem(void);
+t_show_alloc_mem	show_alloc_mem_set(char *small, char *medium);
 
 #endif

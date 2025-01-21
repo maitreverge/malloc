@@ -125,7 +125,10 @@ void	*my_malloc(size_t size)
 	static u_int64_t	g_alloc_lst_size = 0;
 
 	if (g_alloc_lst == NULL || g_alloc_lst_size == 0)
+	{
 		prealloc_zones(&small, &medium);
+		(void)show_alloc_mem_set(small, medium);
+	}
 	if (size <= MEDIUM_ENTRY)
 	{
 		if (size == 0)
@@ -152,17 +155,13 @@ void	*my_malloc(size_t size)
 
 int main(void)
 {
-	// char *s = malloc(0);
-	// free(s);
+	// free(NULL);
 	// return (0);
 	char *a = my_malloc(13 + 1);	//small
 	char *b = my_malloc(42 + 1);	//medium
 	char *c = my_malloc(222 + 1);	//large
 
-	// for (int i = 0; i < 23; i++)
-	// 	a[i] = 'a';
-	// a[23] = '\0';
-	// printf("%s\n", a);
+	// show_alloc_mem();
 
 	my_free(a);
 	my_free(b);
