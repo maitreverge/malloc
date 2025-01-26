@@ -10,7 +10,7 @@ void	*my_realloc(void *ptr, size_t size)
 	if (ptr == NULL)
 		return (my_malloc(size));
 	if (size == 0 && ptr != NULL)
-		return (my_free(ptr), 0);
+		return (my_free(ptr), NULL);
 
 	new = my_malloc(size);
 	if (!new)
@@ -20,7 +20,7 @@ void	*my_realloc(void *ptr, size_t size)
 	}
 	ft_strlcpy(new, (char *)ptr, ft_strlen((char *)ptr));
 	my_free(ptr);
-	return (new);
+	return ((void *)new);
 }
 
 // void	*my_realloc(void *ptr, size_t size)
