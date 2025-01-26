@@ -4,27 +4,33 @@ ifeq ($(HOSTTYPE),)
 	HOSTTYPE := $(shell uname -m)_$(shell uname -s)
 endif
 
-CFLAGS = -Wall -Wextra -Werror -g
+# I added -fPIC (in short, I can use your functions memory safely in my code and simultaneously)
+CFLAGS = -Wall -Wextra -Werror -g -fPIC
 
-NAME = libft_malloc_$(HOSTTYPE).so
+NAME := libft_malloc_$(HOSTTYPE).so
+LINK := libft_malloc.so
 
 SRC = malloc.c \
 		free.c \
 		realloc.c \
 		utils.c
 
-
-#prob doesn't work, can't remember makefile
 OBJ = $(SRC:.c=.o)
 
-all: lft $(NAME)
+%.o: %.c
+	gcc $(CFLAGS) -c $< -o $@
+
+all: lft $(NAME) $(LINK)
 
 lft:
 	make -C libft/
 	make -C libft/ bonus
 
 $(NAME): $(OBJ)
-	gcc $(SRC) -o $(NAME) libft/libft.a $(CFLAGS)
+	gcc -shared -o $(NAME) $(OBJ) libft/libft.a $(CFLAGS)
+
+$(LINK): $(NAME)
+	ln -sf $(NAME) $(LINK)
 
 clean:
 	make -C libft/ clean
@@ -32,7 +38,7 @@ clean:
 
 fclean: clean
 	make -C libft/ fclean
-	rm -rf $(NAME)
+	rm -rf $(NAME) $(LINK)
 	rm -f a.out
 
 re: fclean all
