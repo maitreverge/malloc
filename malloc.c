@@ -152,30 +152,3 @@ void	*my_malloc(size_t size)
 	update_alloc_lst(size, addr, ADD_ENTRY, &g_alloc_lst_size);
 	return (addr);
 }
-
-
-int main(void)
-{
-	// char *a = my_malloc(13 + 1);	//small
-	// char *b = my_malloc(42 + 1);	//medium
-	// char *c = my_malloc(222 + 1);	//large
-
-	// show_alloc_mem();
-
-	// my_free(a);
-	// my_free(b);
-	// my_free(c);
-
-	char *s[100];
-
-	for (int i = 0; i < 100; i++)
-	{
-		s[i] = my_malloc(i + 1);
-		printf("%d\n", i);
-	}
-	for (int i = 0; i < 100; i++)
-	{
-		my_free(s[i]);
-	}
-	return (0);
-}
